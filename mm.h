@@ -162,9 +162,14 @@ static inline pgd_t *va_to_pgd(uintptr_t va)
 	return pgd_offset(current->mm, va);
 }
 
+static inline p4d_t *va_to_p4d(uintptr_t va)
+{
+	return p4d_offset(va_to_pgd(va), va);
+}
+
 static inline pud_t *va_to_pud(uintptr_t va)
 {
-	return pud_offset(va_to_pgd(va), va);
+	return pud_offset(va_to_p4d(va), va);
 }
 
 static inline pmd_t *va_to_pmd(uintptr_t va)
@@ -180,6 +185,7 @@ static inline pte_t *va_to_pte(uintptr_t va)
 static inline pte_t *pte_from_cr3_va(uintptr_t cr3, uintptr_t va)
 {
 	pgd_t *pgd;
+	p4d_t *p4d;
 	pud_t *pud;
 	pmd_t *pmd;
 
@@ -187,7 +193,11 @@ static inline pte_t *pte_from_cr3_va(uintptr_t cr3, uintptr_t va)
 	if (pgd_none(*pgd) || pgd_bad(*pgd))
 		return NULL;
 
-	pud = pud_offset(pgd, va);
+	p4d = p4d_offset(pgd, va);
+	if (p4d_none(*p4d) || p4d_bad(*p4d))
+		return NULL;
+
+	pud = pud_offset(p4d, va);
 	if (pud_none(*pud) || pud_bad(*pud))
 		return NULL;
 

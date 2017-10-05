@@ -21,6 +21,7 @@
 #include <linux/init.h>
 #include <linux/device.h>
 #include <linux/reboot.h>
+#include <linux/sched/mm.h>
 
 #include "ksm.h"
 #include "um/um.h"
