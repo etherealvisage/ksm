@@ -206,14 +206,20 @@ static void __exit ksm_cleanup(void)
 {
 	int ret, active;
 
+	KSM_DEBUG("ksm_cleanup A");
 	device_destroy(class, MKDEV(major_no, 0));
+	KSM_DEBUG("ksm_cleanup B");
 	class_destroy(class);
+	KSM_DEBUG("ksm_cleanup C");
 	unregister_chrdev(major_no, UM_DEVICE_NAME);
+	KSM_DEBUG("ksm_cleanup D");
 	unregister_reboot_notifier(&reboot_notify);
+	KSM_DEBUG("ksm_cleanup E");
 
-	active = ksm->active_vcpus;
-	ret = ksm_free(ksm);
-	KSM_DEBUG("%d were active: ret: %d\n", active, ret);
+    if (ksm != 0) {
+        active = ksm->active_vcpus;
+        ret = ksm_free(ksm);
+    }
 
 	if (mm)
 		mmdrop(mm);
