@@ -105,50 +105,35 @@ static inline void init_io_bitmaps(struct ksm *k)
  */
 int __ksm_init_cpu(struct ksm *k)
 {
-    KSM_DEBUG_RAW("__ksm_init_cpu A\n");
 	struct vcpu *vcpu;
 	int ret = ERR_NOMEM;
 	u64 feat_ctl;
 	u64 required_feat_bits = FEATURE_CONTROL_LOCKED |
 		FEATURE_CONTROL_VMXON_ENABLED_OUTSIDE_SMX;
 
-    KSM_DEBUG_RAW("__ksm_init_cpu B\n");
 	vcpu = ksm_cpu(k);
-    KSM_DEBUG_RAW("__ksm_init_cpu C\n");
-    KSM_DEBUG("vcpu: %p\n", vcpu);
 	if (vcpu->subverted) {
 		KSM_DEBUG_RAW("CPU already subverted\n");
 		return 0;
 	}
-    KSM_DEBUG_RAW("__ksm_init_cpu D\n");
 
 #ifdef __linux__
 	if (tboot_enabled())
 		required_feat_bits |= FEATURE_CONTROL_VMXON_ENABLED_INSIDE_SMX;
 #endif
 
-    KSM_DEBUG_RAW("__ksm_init_cpu E\n");
-
 	feat_ctl = __readmsr(MSR_IA32_FEATURE_CONTROL);
 	if ((feat_ctl & required_feat_bits) != required_feat_bits) {
-        KSM_DEBUG_RAW("__ksm_init_cpu F\n");
-
 		if (feat_ctl & FEATURE_CONTROL_LOCKED)
 			return ERR_BUSY;
 
-        KSM_DEBUG_RAW("__ksm_init_cpu G\n");
-
 		__writemsr(MSR_IA32_FEATURE_CONTROL, feat_ctl | required_feat_bits);
 		feat_ctl = __readmsr(MSR_IA32_FEATURE_CONTROL);
-        KSM_DEBUG_RAW("__ksm_init_cpu H\n");
 		if ((feat_ctl & required_feat_bits) != required_feat_bits)
 			return ERR_DENIED;
 	}
-    KSM_DEBUG_RAW("__ksm_init_cpu I\n");
 
 	ret = vcpu_init(vcpu);
-
-    KSM_DEBUG_RAW("__ksm_init_cpu J\n");
 	if (ret < 0) {
 		KSM_DEBUG_RAW("failed to create vcpu, oom?\n");
 		return ret;
@@ -158,11 +143,9 @@ int __ksm_init_cpu(struct ksm *k)
 	ret = __vmx_vminit(vcpu);
 	KSM_DEBUG("%s: Started: %d\n", proc_name(), !ret);
 
-    KSM_DEBUG_RAW("__ksm_init_cpu K\n");
 	if (ret < 0)
 		goto out;
 
-    KSM_DEBUG_RAW("__ksm_init_cpu L\n");
 	vcpu->subverted = true;
 	k->active_vcpus++;
 	return 0;
@@ -283,7 +266,6 @@ out_epage:
 	ksm_epage_exit(k);
 #endif
 out_ksm:
-	KSM_DEBUG("ksm_init early out!");
 	mm_free_pool(k, sizeof(*k));
 	return ret;
 }

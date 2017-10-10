@@ -47,14 +47,12 @@ int register_cpu_callback(void)
 		"ksm/hotplug:online", ksm_hotplug_cpu_online,
 		ksm_hotplug_cpu_teardown);
 
-    KSM_DEBUG("cpu state: %d\n", hotplug_cpu_state);
-
 	return 0;
 }
 
 void unregister_cpu_callback(void)
 {
-	//cpuhp_remove_state(hotplug_cpu_state);
+	cpuhp_remove_state(hotplug_cpu_state);
 }
 #else
 static void *hotplug_cpu;
