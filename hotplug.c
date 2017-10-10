@@ -22,42 +22,37 @@ static inline void do_cpu(void *v)
 	KSM_DEBUG("On CPU calling %d\n", ret);
 }
 
-static int ksm_hotplug_cpu(struct notifier_block *nfb, unsigned long action, void *hcpu)
+static int ksm_hotplug_cpu_online(unsigned int cpu)
 {
-	unsigned long cpu = (unsigned long)hcpu;
+	get_online_cpus();
+	if(cpu_online(cpu))
+		smp_call_function_single(cpu, do_cpu, __ksm_init_cpu, 1);
+	put_online_cpus();
 
-	KSM_DEBUG("CPU %ld action: %ld\n", cpu, action);
-	switch (action) {
-	case CPU_ONLINE:
-	case CPU_ONLINE_FROZEN:
-		get_online_cpus();
-		if (cpu_online(cpu))
-			smp_call_function_single(cpu, do_cpu, __ksm_init_cpu, 1);
-		put_online_cpus();
-		break;
-	case CPU_DOWN_PREPARE:
-	case CPU_DYING:
-	case CPU_DYING_FROZEN:
-		smp_call_function_single(cpu, do_cpu, __ksm_exit_cpu, 1);
-		break;
-	}
-
-	return NOTIFY_OK;
+	return 0;
 }
 
-static struct notifier_block cpu_notify = {
-	.notifier_call = ksm_hotplug_cpu
-};
+static int ksm_hotplug_cpu_teardown(unsigned int cpu)
+{
+	smp_call_function_single(cpu, do_cpu, __ksm_exit_cpu, 1);
+
+	return 0;
+}
+
+static enum cpuhp_state hotplug_cpu_state = CPUHP_OFFLINE;
 
 int register_cpu_callback(void)
 {
-	register_hotcpu_notifier(&cpu_notify);
+	hotplug_cpu_state = cpuhp_setup_state_nocalls(CPUHP_AP_ONLINE_DYN,
+		"ksm/hotplug:online", ksm_hotplug_cpu_online,
+		ksm_hotplug_cpu_teardown);
+
 	return 0;
 }
 
 void unregister_cpu_callback(void)
 {
-	unregister_hotcpu_notifier(&cpu_notify);
+	cpuhp_remove_state(hotplug_cpu_state);
 }
 #else
 static void *hotplug_cpu;

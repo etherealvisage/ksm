@@ -21,6 +21,7 @@
 #include <linux/init.h>
 #include <linux/device.h>
 #include <linux/reboot.h>
+#include <linux/sched/mm.h>
 
 #include "ksm.h"
 #include "um/um.h"
@@ -210,9 +211,10 @@ static void __exit ksm_cleanup(void)
 	unregister_chrdev(major_no, UM_DEVICE_NAME);
 	unregister_reboot_notifier(&reboot_notify);
 
-	active = ksm->active_vcpus;
-	ret = ksm_free(ksm);
-	KSM_DEBUG("%d were active: ret: %d\n", active, ret);
+	if (ksm != 0) {
+		active = ksm->active_vcpus;
+		ret = ksm_free(ksm);
+	}
 
 	if (mm)
 		mmdrop(mm);

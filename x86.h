@@ -676,7 +676,7 @@ static inline void __writemsr(u32 msr, u64 val)
 #define __readcr0 	read_cr0
 #define __writecr0	write_cr0
 
-#define __readcr3 	read_cr3
+#define __readcr3 	__native_read_cr3
 #define __writecr3	write_cr3
 
 #define __readcr2()	__extension__ ({	\
